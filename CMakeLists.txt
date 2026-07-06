@@ -322,7 +322,13 @@ if (${EMSCRIPTEN})
 	
 	# to check for memory errors
 	# target_link_options (OcctImportJS PUBLIC -sASSERTIONS=1 -sSAFE_HEAP=1 -sWARN_UNALIGNED=1)
-	
+
+	# Chrome MV3 CSP: emscripten's default DYNAMIC_EXECUTION=1 makes embind's craftInvokerFunction
+	# compile method invokers via the Function constructor (eval) at wasm-init, which MV3 forbids
+	# ('unsafe-eval' is rejected outright). =0 switches embind to closure-based invokers so the module
+	# loads under `script-src 'self' 'wasm-unsafe-eval'` with no eval.
+	target_link_options (OcctImportJS PUBLIC -sDYNAMIC_EXECUTION=0)
+
 	target_link_options (OcctImportJS PUBLIC --bind)
 else ()
 	add_library (OcctImportJS ${OcctImportJSSourceFiles} ${OcctSourceFiles})

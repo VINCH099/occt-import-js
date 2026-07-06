@@ -7,6 +7,9 @@ jobs:
 
     runs-on: ${{matrix.os-type}}
 
+    permissions:
+      contents: write
+
     strategy:
       matrix:
         os-type: [windows-2022]
@@ -27,3 +30,16 @@ jobs:
       run: npm install
     - name: Run Test
       run: npm run test
+    - name: Publish CSP build to Release
+      if: always()
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        ls -la build/wasm/Release/ || echo "build output dir missing"
+        gh release delete csp-build --yes --cleanup-tag || echo "no existing release to delete"
+        gh release create csp-build \
+          build/wasm/Release/occt-import-js.js \
+          build/wasm/Release/occt-import-js.wasm \
+          --title "MV3 CSP build (DYNAMIC_EXECUTION=0)" \
+          --notes "occt-import-js rebuilt with -sDYNAMIC_EXECUTION=0 for Chrome MV3 (no unsafe-eval). Auto-published by CI."
